@@ -23,26 +23,41 @@ def index():
 @app.route('/recommend')
 def recommend_ui():
     initial = True
-    return render_template('recommend.html', initial=initial)
+    user_input = request.args.get('user_input', '')
+    suggestions = []
+
+    if user_input:
+        suggestions = [book for book in pt.index if user_input.lower() in book.lower()]
+
+    all_books = list(pt.index)  # Get all book titles
+
+    return render_template('recommend.html', initial=initial, user_input=user_input, suggestions=suggestions, data=[], all_books=all_books)
 
 @app.route('/recommend_books', methods=['POST'])
 def recommend():
     user_input = request.form.get('user_input')
     similar_items = []
-    if len(np.where(pt.index == user_input)[0]) != 0:
-        index = np.where(pt.index == user_input)[0][0]
+    message = None
+
+    if user_input in pt.index:
+        index = pt.index.get_loc(user_input)
         similar_items = sorted(list(enumerate(similarity_scores[index])), key=lambda x: x[1], reverse=True)[1:5]
+        
+        data = []
+        for i in similar_items:
+            item = []
+            temp_df = books[books['Book-Title'] == pt.index[i[0]]]
+            item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
+            item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
+            item.extend(list(temp_df.drop_duplicates('Book-Title')['Image-URL-M'].values))
+            data.append(item)
+    else:
+        message = "The book is not in the database."
+        data = []
 
-    data = []
-    for i in similar_items:
-        item = []
-        temp_df = books[books['Book-Title'] == pt.index[i[0]]]
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Title'].values))
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Book-Author'].values))
-        item.extend(list(temp_df.drop_duplicates('Book-Title')['Image-URL-M'].values))
-        data.append(item)
+    all_books = list(pt.index)  # Get all book titles
 
-    return render_template('recommend.html', data=data)
+    return render_template('recommend.html', data=data, message=message, user_input=user_input, suggestions=[], all_books=all_books)
 
 @app.route('/contact')
 def contact():

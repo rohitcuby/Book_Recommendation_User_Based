@@ -4,12 +4,31 @@
     <meta charset="UTF-8">
     <title>Book Recommender System</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <style>
+        .text-white {
+            color: white;
+        }
+        .suggestion-list {
+            background-color: white;
+            border: 1px solid #ddd;
+            max-height: 150px;
+            overflow-y: auto;
+            position: absolute;
+            width: calc(100% - 2px);
+        }
+        .suggestion-list li {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .suggestion-list li:hover {
+            background-color: #ddd;
+        }
+        .book-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
-<style>
-    .text-white {
-        color: white;
-    }
-</style>
 <body style="background-color: black">
 
     <nav class="navbar" style="background-color: #00a65a">
@@ -26,9 +45,31 @@
             <div class="col-md-12">
                 <h1 class="text-white" style="font-size: 50px">Recommend Books</h1>
                 <form action="/recommend_books" method="post">
-                    <input name="user_input" type="text" class="form-control" placeholder="Enter book name"><br>
+                    <div style="position: relative;">
+                        <input name="user_input" type="text" class="form-control" placeholder="Enter book name" autocomplete="off" value="{{ user_input }}">
+                        <ul class="suggestion-list">
+                            {% if suggestions %}
+                                {% for book in suggestions %}
+                                    <li><a href="?user_input={{ book }}">{{ book }}</a></li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                    </div><br>
                     <input type="submit" class="btn btn-lg btn-warning">
                 </form>
+
+                {% if message %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endif %}
+
+                <div class="book-list">
+                    <h2 class="text-white">Available Books</h2>
+                    <ul>
+                        {% for book in all_books %}
+                            <li class="text-white">{{ book }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
 
             {% if data %}
